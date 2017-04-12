@@ -1,0 +1,135 @@
+.globl my_main
+.data
+# full array below
+arrayA:
+.word 5, 20, 2, 17, 18, 9, 7, 1, 4, 3
+
+
+# useful strings below
+startText:
+.asciiz "Program Start\nBrendon Burke\n\n"
+
+arrayText:
+.asciiz "arrayA = {"
+
+space:
+.asciiz " "
+
+comma:
+.asciiz ","
+
+endText:
+.asciiz "Program End"
+
+endArray: 
+.asciiz "}\n\n"
+.text
+
+my_main:
+
+li $v0, 4 # print string command
+la $a0, startText # load string to be printed
+syscall # execute command
+la $s0, arrayA
+
+jal PRINTARR # jump to PRINTARR and create return address 
+
+li $t1, 9 # number of passes over array
+
+swap_loop1:
+
+beqz $t1, sort_done # if done sorting, move on
+
+la $s0, arrayA #load address of array
+li $t2, 9 # max number of swaps per pass
+
+swap_loop2:
+
+lw $a0, 0($s0) #load values from arrayA to registers $a0 and $a1
+lw $a1, 4($s0)
+
+blt $a0, $a1, skip_swap # if less than, no swap.
+
+jal SWAP # jump to swap and leave retrn address
+
+sw $a0, 0($s0) # store new values in arrayA
+sw $a1, 4($s0)
+
+skip_swap:
+
+addi $t2, $t2, -1 # decrement max number of swaps in current pass
+addi $s0, $s0, 4 # move pointer to next array element
+
+bnez $t2, swap_loop2 # if pass not complete, loop again
+
+addi $t1, $t1, -1 # pass complete, decrement number of passes left
+
+j swap_loop1 # start over again with semi sorted arrayA
+
+sort_done:
+
+la $s0, arrayA # reset $s0 to routh address of arrayA
+
+jal PRINTARR   # print to console the values of the sorted array in one line
+
+li $v0, 4
+la $a0, endText   # print to console "program end"
+syscall
+
+
+li $v0, 10    # return control to the system
+syscall
+
+SWAP:
+
+move $t0, $a0 # store value in $a0 in $t0
+move $a0, $a1 # move value from $a1 to $a0
+move $a1, $t0 # replace value in $a1 with original value of $a0
+
+j $ra # jump back to return address
+
+
+PRINTARR:
+
+li $v0, 4 
+la, $a0, arrayText # print the template for printing the array: arrayA = {
+syscall
+
+li $t3, 9 # numbers to print
+
+print_loop:
+
+j PRINTN # begin print loop
+
+after_print:
+
+li $v0, 1
+lw $a0, 0($s0) # print last value of arrayA
+syscall
+
+li $v0, 4
+la, $a0, endArray # print final bracket
+syscall 
+
+j $ra # return control to my_main
+
+PRINTN:
+
+li $v0, 1 
+lw $a0, 0($s0) # print selected array value
+syscall
+
+la $a0, comma
+li $v0,4  # print commas between numbers
+syscall
+
+la $a0, space
+li $v0,4  # print space between numbers
+syscall
+
+addi $s0, $s0, 4 # increment pointer to next value
+addi $t3,$t3, -1 # decrement number of values to print
+
+beqz $t3, after_print # if done printing values, let PRINTARR finish
+
+j print_loop # if not, keep printing values
