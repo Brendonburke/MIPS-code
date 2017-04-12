@@ -1,0 +1,78 @@
+.data
+startMessage: .asciiz "Program Start\nBrendon Burke\n"
+endMessage: .asciiz "Program Finished" 
+space: .asciiz " "
+line: .asciiz"\n"
+
+.text
+.globl main
+
+main:
+li, $s0, 0 # initialized result as zero
+li, $s1, 11 # load multiplier
+li, $s2, 61 # load multiplicand
+li, $t4, 0 # number of shifts allowed
+move $s0, $s2 # copy multiplicand value to result
+
+li $v0, 4
+la $a0, startMessage # print starting message
+syscall
+
+ori $t1, $zero, 1 # variable to use in and comparisons
+
+move $t0, $s2 #copy multiplicand to $t0
+
+loop:
+
+# print numbers below
+
+li $v0, 1
+move $a0, $t4
+syscall
+
+li $v0, 4
+la $a0, space
+syscall
+
+li $v0, 1
+move $a0, $t0
+syscall
+
+li $v0, 4
+la $a0, space
+syscall
+
+li $v0, 1
+move $a0, $s0
+syscall
+
+li $v0, 4
+la $a0, line
+syscall
+
+
+srl $s1, $s1, 1 # shift both integers
+sll $s2, $s2, 1
+
+and $t3, $t1, $s1 # check if addition should happen 
+beq $t3, 0, shifter
+move $t0, $s2
+addu $s0, $t0, $s0
+addi $t4, $t4 1
+beq $t4, 16, exit
+j loop
+
+shifter:
+li $t0, 0
+addi $t4, $t4 1
+beq $t4, 16, exit
+j loop
+
+exit:
+
+li $v0, 4
+la $a0, endMessage
+syscall
+
+li $v0, 10
+syscall
